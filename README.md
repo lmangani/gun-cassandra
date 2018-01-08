@@ -23,15 +23,15 @@ var gun = Gun({
 });
 ```
      
-# Changelog
+### Changelog
 - 1.0.1 first version for gun 0.9.x based on node-db
 
-# TODO
+### TODO
 * [ ] Implement Docker Test w/ Cassandra 3.11
 * [ ] Modularize CQL queries
 * [ ] Stress-Performance Test
 
-# Acknowledgement
+### Acknowledgement
 
 Gun is open-sourced and copyrighted by Mark Nadal
 

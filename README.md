@@ -1,7 +1,9 @@
 # Gun-Cassandra
 CQL/Cassandra native persistence layer for [gun](https://github.com/amark/gun)
 
-[GUN](https://github.com/amark/gun) is an Open Source Graph database _(think Firebase)_ with swappable storage engines (level, SQLite, etc.) that handles data synchronization across machines / devices.
+[GUN](https://github.com/amark/gun) is a realtime, distributed, offline-first, graph database engine.
+
+# WIP. DO NOT USE THIS (yet!)
 
 
 ### Installation

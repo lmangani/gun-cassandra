@@ -15,8 +15,9 @@
   "author": "L. Mangani (lorenzo.mangani@gmail.com)",
   "license": "MIT",
   "dependencies": {
-    "cassandra-driver": "^3.3.0",
-    "gun": "^0.9.0"
+    "cassanknex": "^1.16.0",
+    "gun": "^0.9.0",
+    "jshint": "^2.9.5",
   },
   "repository": {
     "type": "git",

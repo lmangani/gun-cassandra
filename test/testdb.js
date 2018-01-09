@@ -1,14 +1,8 @@
-
-
 var Gun = require( "gun/gun" );
 var gunNot = require('gun/lib/not')
-var gunDb = require( "." );
+var gunDb = require( ".." );
 
-//var vfs = require( "sack.vfs" );
-//var vol = vfs.Volume( "Mount", "data.vfs" );
-//var gun = new Gun( { db:{ file:'$sack@Mount$gun.db' } } );
-
-var gun = new Gun( /*{ db:{ file:'gun.db' } }*/ );
+var gun = new Gun( { db:{ contactPoints: ['elassandra-seed'] } } );
 
 console.log( new Date(), "Initialized gun instance" );
 var root = gun.get( "db" );

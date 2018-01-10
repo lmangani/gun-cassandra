@@ -4,8 +4,6 @@
 
 const Gun = require('gun/gun');
 
-//const vfs = require("sack.vfs");
-
 var _debug_counter = 0;
 var __debug_counter = 0;
 var _debug_tick = Date.now();

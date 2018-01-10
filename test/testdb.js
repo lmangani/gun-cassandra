@@ -1,6 +1,6 @@
 var Gun = require( "gun/gun" );
 var gunNot = require('gun/lib/not')
-var gunDb = require( ".." );
+var gunDb = require( "../index" );
 
 var gun = new Gun( { db:{ contactPoints: ['elassandra-seed'] } } );
 

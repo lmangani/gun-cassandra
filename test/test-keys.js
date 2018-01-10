@@ -15,7 +15,7 @@ var root = gun.get( 'db' );
 var tick = Date.now();
 for( var i = 1; i < 10; i++ ) {
 	var obj = {};
-	for( var j = 1; j < 10; j++ ) {
+	for( var j = 1; j < 100; j++ ) {
         	obj["key"+j] = "Some 10 character value";
 	}
         root.get( i.toString() ).put( obj );

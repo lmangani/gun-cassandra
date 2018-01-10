@@ -165,7 +165,7 @@ Gun.on('opt', function(ctx) {
         }
         var soul = lex['#'];
         var field = lex[val_];
-        //_debug && console.log( new Date(), "doing get...for soul:", soul, "field:",field );
+        _debug && console.log( new Date(), "doing get...for soul:", soul, "field:",field );
         if (node_ === field) {
             if (!qb) return;
             qb(qpath)
@@ -174,11 +174,11 @@ Gun.on('opt', function(ctx) {
                 .limit(1)
                 .exec(function(err, record) {
                     if (err) {
-                        console.log('SELECT:', err, record);
+                        console.log('FAILED SELECT:', err);
                     }
 
                     //_debug && console.log( new Date(), "select result:", record );
-                    if (!record || !record.length) {
+                    if (!record || !record.length || err) {
                         //_debug && console.log( "So, result with an in?" );
                         return ctx.on('in', {
                             [ACK_]: at[SEQ_]

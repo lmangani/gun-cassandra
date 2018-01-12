@@ -3,7 +3,7 @@ CQL/Cassandra native persistence layer for [gun](https://github.com/amark/gun)
 
 [GUN](https://github.com/amark/gun) is a realtime, distributed, offline-first, graph database engine.
 
-# WIP. DO NOT USE THIS (yet!)
+### THIS IS EXPERIMENTAL WORK IN PROGRESS! USE AT YOUR OWN RISK!
 
 
 ### Installation
@@ -25,9 +25,11 @@ var gun = Gun({
 });
 ```
 
-### Test
-The following test runs Fluffy's test successfully. Speed is ridicolously low due to keyspace and table initialization.
-#### Run Test
+### Fluffy's Test
+The following script runs Fluffy's test successfully. Speed is ridicolously low when initializing keyspace and table.<br>
+Comments & Contributions are super welcome!
+
+#### Gun
 ```
 # nodejs test/simple.js 
 Hello wonderful person! :) Thanks for using GUN, feel free to ask for help on https://gitter.im/amark/gun and ask StackOverflow questions tagged with 'gun'!
@@ -54,8 +56,10 @@ cqlsh> SELECT * FROM gun_db.gun_data;
 - 1.0.1 first version for gun 0.9.x based on node-db
 
 ### TODO
+* [ ] Cleanup Gun>Cassandra logic. So we need semaphores?
 * [ ] Implement Docker Test w/ Cassandra 3.11
-* [ ] Modularize CQL queries
+* [ ] Implement Docker Test w/ Elassandra 5.5.0.9
+* [ ] Modularize CQL queries _(named query in CassanKnex)_
 * [ ] Stress-Performance Test
 
 ### Acknowledgement

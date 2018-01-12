@@ -1,7 +1,7 @@
 {
   "name": "gun-cassandra",
   "version": "1.0.1",
-  "description": "Cassandra persistence layer for Gun",
+  "description": "Cassandra persistence layer for Gun DB",
   "main": "index.js",
   "keywords": [
     "gun",
@@ -10,14 +10,14 @@
     "elassandra",
     "cassandra",
     "driver",
-    "vfs"
+    "graph"
   ],
-  "author": "L. Mangani (lorenzo.mangani@gmail.com)",
+  "author": "Lorenzo Mangani (lorenzo.mangani@gmail.com)",
   "license": "MIT",
   "dependencies": {
     "cassanknex": "^1.16.0",
-    "gun": "^0.9.0",
-    "jshint": "^2.9.5",
+    "gun": "^0.9.7",
+    "jshint": "^2.9.5"
   },
   "repository": {
     "type": "git",

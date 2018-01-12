@@ -30,6 +30,7 @@ Gun.on('opt', function(ctx) {
     opt.contactPoints = opt.contactPoints || ['127.0.0.1'];
     opt.table = opt.table || 'gun_data';
     opt.keyspace = opt.keyspace || 'gun_db';
+    const drop = opt.drop || false;
     const qpath = opt.keyspace + "." + opt.table;
     const qb = require("cassanknex")({
         connection: {
@@ -43,6 +44,13 @@ Gun.on('opt', function(ctx) {
         if (err)
             console.error("Error Connecting to Cassandra Cluster", err);
 
+        // drop keyspace
+        if (drop){
+            qb()
+             .dropKeyspaceIfExists(opt.keyspace)
+             .cql();
+        }
+        
         // prepare keyspace & tables
         qb()
             .createKeyspaceIfNotExists(opt.keyspace)

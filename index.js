@@ -7,7 +7,7 @@ const Gun = require('gun/gun');
 var _debug_counter = 0;
 var __debug_counter = 0;
 var _debug_tick = Date.now();
-const _debug = true;
+const _debug = false;
 
 const rel_ = Gun.val.rel._; // '#'
 const val_ = Gun._.field; // '.'

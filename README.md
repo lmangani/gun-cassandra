@@ -24,6 +24,31 @@ var gun = Gun({
   }
 });
 ```
+
+### Test
+The following test runs Fluffy's test successfully. Speed is ridicolously low due to keyspace and table initialization.
+#### Run Test
+```
+# nodejs test/simple.js 
+Hello wonderful person! :) Thanks for using GUN, feel free to ask for help on https://gitter.im/amark/gun and ask StackOverflow questions tagged with 'gun'!
+> Cassandra Cluster connected!
+> Gun-Cassandra Tables Ready!
+> waiting 10 seconds...
+
+Mark's boss is Fluffy
+```
+#### CQL Query
+```
+cqlsh> SELECT * FROM gun_db.gun_data;
+
+ soul                 | field   | relation             | state         | value
+----------------------+---------+----------------------+---------------+--------
+ jccj3klhbH4laGweIBiP |    name |                      | 1515798170328 | Fluffy
+                 mark |    boss | jccj3klhbH4laGweIBiP | 1515798170328 |       
+ jccj3klhbH4laGweIBiP |   slave |                 mark | 1515798170328 |       
+ jccj3klhbH4laGweIBiP | species |                      | 1515798170328 |  kitty
+
+```
      
 ### Changelog
 - 1.0.1 first version for gun 0.9.x based on node-db

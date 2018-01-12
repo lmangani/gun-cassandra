@@ -7,7 +7,7 @@ const Gun = require('gun/gun');
 var _debug_counter = 0;
 var __debug_counter = 0;
 var _debug_tick = Date.now();
-const _debug = false;
+const _debug = true;
 
 const rel_ = Gun.val.rel._; // '#'
 const val_ = Gun._.field; // '.'
@@ -20,10 +20,14 @@ const ACK_ = '@';
 const SEQ_ = '#';
 
 Gun.on('opt', function(ctx) {
-    this.to.next(ctx);
-    if (ctx.once) {
-        return;
-    }
+
+    var goNext = function(){
+	    this.to.next(ctx);
+	    if (ctx.once) {
+	        return;
+	    }
+    }.bind(this);
+
     // DB options
     var opt = ctx.opt.db || (ctx.opt.db = {});
     //opt.file = opt.file || ('file:gun.db?nolock=1');
@@ -33,26 +37,64 @@ Gun.on('opt', function(ctx) {
     const drop = opt.drop || false;
     const qpath = opt.keyspace + "." + opt.table;
     const qb = require("cassanknex")({
+	// debug: _debug || false,
         connection: {
             contactPoints: opt.contactPoints
         }
     });
 
-    var gun = ctx.gun;
 
     qb.on("ready", function(err) {
         if (err)
             console.error("Error Connecting to Cassandra Cluster", err);
+	else
+	    console.log("Cassandra Cluster connected!");
 
-        // drop keyspace
-        if (drop){
+	var dropKeyspace = function(){
             qb()
              .dropKeyspaceIfExists(opt.keyspace)
-             .cql();
-        }
-        
-        // prepare keyspace & tables
-        qb()
+            .exec(function(err, res) {
+                if (err) {
+                    console.log(err);
+		}
+		    createKeyspace();
+	    });
+	}
+	var createIndex = function(){
+		qb(opt.keyspace)
+		  .createIndex(opt.table, "soul_index", "soul")
+		  .createIndex(opt.table, "field_index", "field")
+		  .createIndex(opt.table, "rel_index", "relation")
+	            .exec(function(err, res) {
+	                if (err) {
+	                    console.log(err);
+			}
+		    });
+	}
+
+	var createTable = function(){
+                qb(opt.keyspace)
+                    .createColumnFamilyIfNotExists(opt.table)
+                    .text("soul")
+                    .text("field")
+                    .text("value")
+                    .text("relation")
+                    .bigint("state")
+                    .primary(["soul", "field"])
+                    .exec(function(err, res) {
+                        if (err) {
+                            console.log(err);
+                            return;
+                        } else {
+			    console.log("Gun-Cassandra Tables Ready!");
+			    goGun();
+			}
+                    });
+	}
+
+	var createKeyspace = function(){
+           // prepare keyspace & tables
+           qb()
             .createKeyspaceIfNotExists(opt.keyspace)
             .withSimpleStrategy(1)
             .exec(function(err, res) {
@@ -60,24 +102,28 @@ Gun.on('opt', function(ctx) {
                     console.log(err);
                     return;
                 }
-                qb(opt.keyspace)
-                    .createColumnFamilyIfNotExists(opt.table)
-                    .text("soul")
-                    .text("field")
-                    .text("value")
-                    .text("relation")
-                    .float("state")
-                    .primary(["soul", "field"])
-                    .exec(function(err, res) {
-                        if (err) {
-                            console.log(err);
-                            return;
-                        }
-                    });
+		createTable();
             });
+	}
 
+        if (drop){
+	    console.log('DROP',opt.keyspace);
+	    dropKeyspace();
+        } else {
+       	    createKeyspace();
+	}
+
+
+    });
+
+    var goGun = function(){
+
+	goNext();
+	console.log('GoGun!');
         var skip_put = null;
         var query;
+
+        var gun = ctx.gun;
 
         ctx.on('put', function(at) {
             this.to.next(at);
@@ -85,30 +131,31 @@ Gun.on('opt', function(ctx) {
                 if (_debug) {
                     var now = Date.now();
                     if (now - _debug_tick > 1000) {
-                        console.log("N in M", _debug_counter - __debug_counter, now - _debug_tick, (_debug_counter - __debug_counter) / (now - _debug_tick));
+                        _debug && console.log("N in M", _debug_counter - __debug_counter, now - _debug_tick, (_debug_counter - __debug_counter) / (now - _debug_tick));
                         _debug_tick = now;
                         __debug_counter = _debug_counter;
                     }
                     _debug_counter++;
-                    console.log(new Date(), "skipping put in-get:", _debug_counter, " get putting:", skip_put, at[ACK_], JSON.stringify(at.put));
+                    _debug && console.log(new Date(), "skipping put in-get:", _debug_counter, " get putting:", skip_put, at[ACK_], JSON.stringify(at.put));
                 }
                 return;
             }
-            // _debug && console.log( new Date(), "PUT", at["#"], at["@"], JSON.stringify( at.put ) );
+            _debug && console.log( new Date(), "PUT", at[SEQ_], at[ACK_], JSON.stringify( at.put ) );
             Gun.graph.is(at.put, null, function(value, field, node, soul) {
                 var id;
                 // kinda hate to always do a select just to see that the new update is newer than what was there.
-                qb(qpath)
+                qb(opt.keyspace)
                     .select('state')
-                    .where("soul", "=", soul)
-                    .andWhere("field", "=", field)
-                    .exec(function(err, res) {
+		    .from(opt.table)
+                    .where('soul', '=', soul)
+                    .andWhere('field', '=', field)
+                    .exec(function(err, record) {
+			_debug && console.log('STATE SELECT!',soul,field,record.rows[0]);
                         var dataRelation, dataValue, tmp;
                         var state = Gun.state.is(node, field);
                         // Check to see if what we have on disk is more recent.
-                        //console.log( "result?", record )
-                        if (record && record.length && state <= record[0].state) {
-                            //_debug && console.log( new Date(), "already newer in database.." ); 
+                        if (record && record.rowLength > 0 && state <= record.rows[0].state) {
+                            _debug && console.log( new Date(), "already newer in database.." ); 
                             ctx.on('in', {
                                 [ACK_]: at[rel_],
                                 ok: 1
@@ -116,28 +163,35 @@ Gun.on('opt', function(ctx) {
                             return;
                         }
                         if (value && (tmp = value[rel_])) { // TODO: Don't hardcode.
-                            dataRelation = "'" + JSON.stringify(tmp) + "'";
-                            dataValue = "NULL";
+                            // dataRelation = JSON.stringify(tmp);
+                            dataRelation = tmp;
+                            //dataValue = "NULL";
+                            dataValue = "";
                         } else if (value) {
-                            dataRelation = "NULL";
-                            dataValue = "'" + JSON.stringify(value) + "'";
+                            // dataRelation = "NULL";
+                            dataRelation = "";
+                            //dataValue = JSON.stringify(value);
+                            dataValue = value;
                         } else {
-                            dataRelation = "NULL";
-                            dataValue = "NULL";
+                            //dataRelation = "NULL";
+                            //dataValue = "NULL";
+                            dataRelation = "";
+                            dataValue = "";
                         }
                         try {
                             var values = {
                                 soul: soul,
                                 field: field,
-                                value: value,
-                                relation: relation,
+                                value: dataValue,
+                                relation: dataRelation,
                                 state: state
                             };
-                            qb()
+		            // _debug && console.log( new Date(), "INSERT values:", values );
+                            qb(opt.keyspace)
                                 .insert(values)
-                                .into(qpath)
+                                .into(opt.table)
                                 .exec(function(err, result) {
-                                    console.log(result)
+                                    if(err) { console.log(err); return }
                                 });
 
                             ctx.on('in', {
@@ -145,20 +199,20 @@ Gun.on('opt', function(ctx) {
                                 ok: 1
                             });
                         } catch (e) {
+			    _debug && console.log( new Date(), "error inserting:",e);
                             ctx.on('in', {
                                 [ACK_]: at[rel_],
                                 err: e
                             });
                         }
-                        client.shutdown();
+                        //client.shutdown();
                     });
             });
 
         });
-        //_debug && console.log( new Date(), " : Put done" );
-    });
+        _debug && console.log( new Date(), " : Put done" );
 
-    ctx.on('get', function(at) {
+      ctx.on('get', function(at) {
         this.to.next(at);
         if (!qb) {
             console.log("Lost the database somehow");
@@ -169,28 +223,30 @@ Gun.on('opt', function(ctx) {
         if (!lex) {
             return;
         }
-        var soul = lex['#'];
+        var soul = lex[SEQ_];
         var field = lex[val_];
+	console.log('LEX',lex);
         _debug && console.log( new Date(), "doing get...for soul:", soul, "field:",field );
         if (node_ === field) {
             if (!qb) return;
-            qb(qpath)
-                .select('*')
+            qb(opt.keyspace)
+                .select()
+		.from(opt.table)
                 .where("soul", "=", soul)
                 .limit(1)
                 .exec(function(err, record) {
                     if (err) {
                         console.log('FAILED SELECT:', err);
                     }
-
-                    //_debug && console.log( new Date(), "select result:", record );
-                    if (!record || !record.length || err) {
-                        //_debug && console.log( "So, result with an in?" );
+		   
+                    _debug && console.log( new Date(), "select result:", record );
+                    if (!record || !record.rowLength == 0 || err) {
+                        _debug && console.log( "So, result with an in?" );
                         return ctx.on('in', {
                             [ACK_]: at[SEQ_]
                         });
                     }
-                    //_debug && console.log( new Date(), "give back empty"  );
+                    _debug && console.log( new Date(), "give back empty"  );
                     return ctx.on('in', {
                         [ACK_]: at[SEQ_],
                         put: {
@@ -207,14 +263,16 @@ Gun.on('opt', function(ctx) {
         }
         if (field) {
 
-            qb(qpath)
-                .select('*')
+            qb(opt.keyspace)
+                .select()
+		.from(opt.table)
                 .where("soul", "=", soul)
                 .andWhere("field", "=", field)
                 .exec(function(err, record) {
-                    if (record && record.length) {
-                        //_debug && console.log( new Date(), "Specific field?", record );
-                        let rec = record[0];
+                    if (record && record.rowLength > 0) {
+			var tmp = record.rows[0];
+                        let rec = { soul: tmp.soul, field: tmp.field, realtion: tmp.relation, state: parseInt(tmp.state), value: tmp.value };
+                        _debug && console.log( new Date(), "Specific field?", rec );
                         var msg;
                         if (rec.relation)
                             msg = {
@@ -226,7 +284,7 @@ Gun.on('opt', function(ctx) {
                                         }
                                     },
                                     [rec.field]: {
-                                        [rel_]: JSON.parse(rec.relation)
+                                        [rel_]: rec.relation
                                     }
                                 }
                             };
@@ -239,7 +297,7 @@ Gun.on('opt', function(ctx) {
                                             [rec.field]: rec.state
                                         }
                                     },
-                                    [rec.field]: JSON.parse(rec.value)
+                                    [rec.field]: rec.value
                                 }
                             };
                         else
@@ -266,19 +324,20 @@ Gun.on('opt', function(ctx) {
                 });
 
         }
-        //_debug && console.log( new Date(), "select all fields...", soul );
-        qb(qpath)
-            .select('*')
+        _debug && console.log( new Date(), "select all fields...", soul );
+        qb(opt.keyspace)
+            .select()
+	    .from(opt.table)
             .where("soul", "=", soul)
             .exec(function(err, record) {
-                if (!record || !record.length) {
-                    //_debug && console.log( new Date(), "nothing... So, result with an in?" );
+                if (!record || record.rowLength == 0) {
+                    _debug && console.log( new Date(), "nothing... So, result with an in?" );
                     ctx.on('in', {
                         [ACK_]: at[SEQ_]
                     });
                 } else {
-                    //_debug && console.log( new Date(), "got result" );
-                    if (record.length > 1) {
+                    _debug && console.log( new Date(), "got result",record.rows[0] );
+                    if (record.rowLength > 0) {
                         var state, node;
                         var rec = {
                             [soul]: {
@@ -290,26 +349,27 @@ Gun.on('opt', function(ctx) {
                         };
                         node = rec[soul];
                         state = node[node_][state_];
-                        record.forEach(function(record) {
-                            state[record.field] = parseFloat(record.state);
+                        record.rows.forEach(function(record) {
+			    _debug && console.log('Parsing ROW:',record);
+                            state[record.field] = parseInt(record.state);
                             if (record.relation)
                                 node[record.field] = {
-                                    [rel_]: JSON.parse(record.relation)
+                                    [rel_]: record.relation
                                 };
                             else if (record.value)
-                                node[record.field] = JSON.parse(record.value);
+                                node[record.field] = record.value;
                             else
                                 node[record.field] = null;
                         });
-                        //console.log( new Date(), "Node is now ------------\n", JSON.stringify(rec) );
+                        console.log( new Date(), "Node is now ------------\n", JSON.stringify(rec) );
                         skip_put = at[SEQ_];
-                        //_debug && console.log( new Date(), "put to gun" );
+                        _debug && console.log( new Date(), "put to gun" );
                         ctx.on('in', {
                             ACK_: at[SEQ_],
                             put: rec
                         });
                         skip_put = null;
-                    } else record.forEach(function(record) {
+                    } else record.rows.forEach(function(record) {
                         var msg;
                         if (record.relation)
                             msg = {
@@ -317,11 +377,11 @@ Gun.on('opt', function(ctx) {
                                     [node_]: {
                                         [rel_]: record.soul,
                                         [state_]: {
-                                            [record.field]: parseFloat(record.state)
+                                            [record.field]: parseInt(record.state)
                                         }
                                     },
                                     [record.field]: {
-                                        [rel_]: JSON.parse(record.relation)
+                                        [rel_]: record.relation
                                     }
                                 }
                             };
@@ -331,10 +391,10 @@ Gun.on('opt', function(ctx) {
                                     [node_]: {
                                         [rel_]: record.soul,
                                         [state_]: {
-                                            [record.field]: parseFloat(record.state)
+                                            [record.field]: parseInt(record.state)
                                         }
                                     },
-                                    [record.field]: JSON.parse(record.value)
+                                    [record.field]: record.value
                                 }
                             };
                         else
@@ -343,7 +403,7 @@ Gun.on('opt', function(ctx) {
                                     [node_]: {
                                         [rel_]: record.soul,
                                         [state_]: {
-                                            [record.field]: parseFloat(record.state)
+                                            [record.field]: parseInt(record.state)
                                         }
                                     },
                                     [record.field]: null
@@ -352,16 +412,19 @@ Gun.on('opt', function(ctx) {
                         //console.log( "State is:", typeof( record.state ) );
                         //console.log( new Date(), "  From Nodify", JSON.stringify(msg) );
                         skip_put = at[SEQ_];
-                        //_debug && console.log( new Date(), "put to gun" );
+                        _debug && console.log( new Date(), "put to gun" );
                         result = ctx.on('in', {
                             [ACK_]: at[SEQ_],
                             put: msg
                         });
                         skip_put = null;
                     });
-                    //_debug && console.log( new Date(), "put into gun done" );
+                    _debug && console.log( new Date(), "put into gun done" );
                 }
             });
-    });
+      });
+
+}
+
 
 });

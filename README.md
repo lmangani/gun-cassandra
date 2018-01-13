@@ -33,7 +33,7 @@ var gun = Gun({
 The following script runs Fluffy's test successfully. Speed is ridicolously low when initializing keyspace and table.<br>
 Comments & Contributions are super welcome!
 
-#### GUN -> CQL -> GUN
+#### GUN -> CQL <- GUN
 ```javascript
 var cat = {name: "Fluffy", species: "kitty"};
 var mark = {boss: cat};
@@ -62,15 +62,19 @@ gun.get('mark').get('boss').get('name').val(function(data, key){
 Mark's boss is Fluffy
 ```
 
-#### CQL -> GUN
+#### CQL <- GUN
 ```
 cqlsh> INSERT INTO gun_db.gun_data JSON '{ "soul": "jcdkfchqWeSXR7dzFJdU", "field": "gender", "state": 1515860865492, "relation": "", "value": "male"}';
 ```
 ```javascript
 gun.get('mark').get('boss').get('gender').val(function(data, key){
-   console.log("Boss gender is", data);
+   console.log("Mark's boss gender is", data);
    process.exit(0);
 });
+```
+##### Output:
+```
+Mark's boss gender is male
 ```
 
 ##### Test Script

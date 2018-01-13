@@ -1,3 +1,7 @@
+<p>
+    <a href="http://gun.js.org/"><img width="25%" src="https://cldup.com/TEy9yGh45l.svg"/></a>
+</p> 
+
 # Gun-Cassandra
 CQL/Cassandra native persistence layer for [gun](https://github.com/amark/gun)
 

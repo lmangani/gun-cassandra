@@ -1,6 +1,6 @@
 {
   "name": "gun-cassandra",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Cassandra persistence layer for Gun DB",
   "main": "index.js",
   "keywords": [

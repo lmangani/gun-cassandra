@@ -271,7 +271,7 @@ Gun.on('opt', function(ctx) {
                 .exec(function(err, record) {
                     if (record && record.rowLength > 0) {
 			var tmp = record.rows[0];
-                        let rec = { soul: tmp.soul, field: tmp.field, realtion: tmp.relation, state: parseInt(tmp.state), value: tmp.value };
+                        let rec = { soul: tmp.soul, field: tmp.field, relation: tmp.relation, state: parseInt(tmp.state), value: tmp.value };
                         _debug && console.log( new Date(), "Specific field?", rec );
                         var msg;
                         if (rec.relation)

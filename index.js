@@ -119,7 +119,7 @@ Gun.on('opt', function(ctx) {
     var goGun = function(){
 
 	goNext();
-	console.log('GoGun!');
+	// console.log('GoGun!');
         var skip_put = null;
         var query;
 
@@ -225,7 +225,7 @@ Gun.on('opt', function(ctx) {
         }
         var soul = lex[SEQ_];
         var field = lex[val_];
-	console.log('LEX',lex);
+	_debug && console.log('LEX',lex);
         _debug && console.log( new Date(), "doing get...for soul:", soul, "field:",field );
         if (node_ === field) {
             if (!qb) return;
@@ -313,7 +313,7 @@ Gun.on('opt', function(ctx) {
                                 }
                             };
                         skip_put = at[SEQ_];
-                        console.log(new Date(), msg);
+                        _debug && console.log(new Date(), "PUT", msg);
                         ctx.on('in', {
                             [ACK_]: at[SEQ_],
                             put: msg
@@ -361,7 +361,7 @@ Gun.on('opt', function(ctx) {
                             else
                                 node[record.field] = null;
                         });
-                        console.log( new Date(), "Node is now ------------\n", JSON.stringify(rec) );
+                        _debug && console.log( new Date(), "Node is now ------------\n", JSON.stringify(rec) );
                         skip_put = at[SEQ_];
                         _debug && console.log( new Date(), "put to gun" );
                         ctx.on('in', {

@@ -8,7 +8,9 @@ CQL/Cassandra native persistence layer for [gun](https://github.com/amark/gun)
 [GUN](https://github.com/amark/gun) is a realtime, distributed, offline-first, graph database engine.
 
 ### THIS IS EXPERIMENTAL WORK IN PROGRESS! USE AT YOUR OWN RISK!
+#### Comments and PR/Contributions are super welcome!
 
+-------------
 
 ### Installation
 
@@ -31,7 +33,6 @@ var gun = Gun({
 
 ### Fluffy's Test
 The following script runs Fluffy's test successfully. Speed is ridicolously low when initializing keyspace and table.<br>
-Comments & Contributions are super welcome!
 
 #### GUN -> CQL <- GUN
 ```javascript

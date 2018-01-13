@@ -34,6 +34,7 @@ Gun.on('opt', function(ctx) {
     opt.contactPoints = opt.contactPoints || ['127.0.0.1'];
     opt.table = opt.table || 'gun_data';
     opt.keyspace = opt.keyspace || 'gun_db';
+    opt.ttl = opt.ttl || 0;
     const drop = opt.drop || false;
     const qpath = opt.keyspace + "." + opt.table;
     const qb = require("cassanknex")({
@@ -119,7 +120,6 @@ Gun.on('opt', function(ctx) {
     var goGun = function(){
 
 	goNext();
-	// console.log('GoGun!');
         var skip_put = null;
         var query;
 
@@ -163,18 +163,12 @@ Gun.on('opt', function(ctx) {
                             return;
                         }
                         if (value && (tmp = value[rel_])) { // TODO: Don't hardcode.
-                            // dataRelation = JSON.stringify(tmp);
                             dataRelation = tmp;
-                            //dataValue = "NULL";
                             dataValue = "";
                         } else if (value) {
-                            // dataRelation = "NULL";
                             dataRelation = "";
-                            //dataValue = JSON.stringify(value);
                             dataValue = value;
                         } else {
-                            //dataRelation = "NULL";
-                            //dataValue = "NULL";
                             dataRelation = "";
                             dataValue = "";
                         }
@@ -190,6 +184,7 @@ Gun.on('opt', function(ctx) {
                             qb(opt.keyspace)
                                 .insert(values)
                                 .into(opt.table)
+				.usingTTL(opt.ttl)
                                 .exec(function(err, result) {
                                     if(err) { console.log(err); return }
                                 });
@@ -205,7 +200,6 @@ Gun.on('opt', function(ctx) {
                                 err: e
                             });
                         }
-                        //client.shutdown();
                     });
             });
 
@@ -409,8 +403,8 @@ Gun.on('opt', function(ctx) {
                                     [record.field]: null
                                 }
                             };
-                        //console.log( "State is:", typeof( record.state ) );
-                        //console.log( new Date(), "  From Nodify", JSON.stringify(msg) );
+                        _debug && console.log( "State is:", typeof( record.state ) );
+                        _debug && console.log( new Date(), "  From Nodify", JSON.stringify(msg) );
                         skip_put = at[SEQ_];
                         _debug && console.log( new Date(), "put to gun" );
                         result = ctx.on('in', {

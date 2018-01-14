@@ -95,7 +95,7 @@ Gun-Cassandra Tables Ready!
 Mark's boss is Fluffy
 Boss is a kitty
 ```
-### Cassandra Schema (SimpleStrategy)
+##### Cassandra Schema (SimpleStrategy)
 ```
 cqlsh> DESC KEYSPACE gun_db ;
 
@@ -125,7 +125,7 @@ CREATE TABLE gun_db.gun_data (
 
 
 ```
-### Elassandra Schema (NetworkTopologyStrategy)
+##### Elassandra Schema (NetworkTopologyStrategy)
 ```
 cqlsh> ALTER KEYSPACE gun_db WITH REPLICATION = { 'class' : 'NetworkTopologyStrategy', 'DC1' : 1 } AND DURABLE_WRITES = true;
 cqlsh> DESC KEYSPACE gun_db ;

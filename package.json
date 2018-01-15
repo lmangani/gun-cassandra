@@ -1,6 +1,6 @@
 {
   "name": "gun-cassandra",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Cassandra persistence layer for Gun DB",
   "main": "index.js",
   "keywords": [
@@ -16,7 +16,7 @@
   "license": "MIT",
   "dependencies": {
     "cassanknex": "^1.16.0",
-    "gun": "^0.9.7",
+    "gun": "^0.9.8",
     "jshint": "^2.9.5"
   },
   "repository": {

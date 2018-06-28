@@ -16,7 +16,7 @@
   "license": "MIT",
   "dependencies": {
     "cassanknex": "^1.16.0",
-    "gun": "^0.9.8",
+    "gun": "^0.9.9992",
     "jshint": "^2.9.5"
   },
   "repository": {
